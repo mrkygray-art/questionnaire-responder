@@ -2,11 +2,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 import api.index as web
+from responder.ratelimit import Limiter
 
 
 @pytest.fixture(autouse=True)
 def reset(monkeypatch):
-    web._hits.clear()
+    monkeypatch.setattr(web, "limiter", Limiter(hourly=20, daily=300))  # memory only, no network
     monkeypatch.setattr(web, "_client", None)  # mock mode, no network
 
 
@@ -28,11 +29,24 @@ def test_question_length_is_capped():
     assert c.post("/api/answer", json={"question": "hi"}).status_code == 422
 
 
-def test_rate_limit(monkeypatch):
-    monkeypatch.setattr(web, "HOURLY_LIMIT", 2)
+def test_hourly_limit(monkeypatch):
+    monkeypatch.setattr(web, "limiter", Limiter(hourly=2, daily=300))
     c = TestClient(web.app)
     codes = [c.post("/api/answer", json={"question": "Do you offer an SLA?"}).status_code for _ in range(3)]
     assert codes == [200, 200, 429]
+
+
+def test_daily_cap_blocks_everyone_and_says_so(monkeypatch):
+    monkeypatch.setattr(web, "limiter", Limiter(hourly=20, daily=2))
+    c = TestClient(web.app)
+    ok = [c.post("/api/answer", json={"question": "Do you offer an SLA?"}, headers={"x-forwarded-for": f"1.1.1.{i}"}).status_code
+          for i in range(2)]
+    blocked = c.post("/api/answer", json={"question": "Do you offer an SLA?"}, headers={"x-forwarded-for": "9.9.9.9"})
+    assert ok == [200, 200] and blocked.status_code == 429 and "today's limit" in blocked.json()["detail"]
+
+
+def test_health_reports_the_limiter():
+    assert TestClient(web.app).get("/api/health").json()["limiter"].startswith("memory")
 
 
 def test_failures_are_logged_without_the_question(monkeypatch, caplog):

@@ -28,7 +28,7 @@ The model drafts. Code decides what ships:
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-python -m pytest -q                       # 15 tests, no API key needed
+python -m pytest -q                       # 28 tests, no API key needed
 
 export ANTHROPIC_API_KEY=sk-ant-...       # optional: without it the API runs in mock mode
 SERVE_STATIC=1 uvicorn api.index:app --reload   # test page at http://127.0.0.1:8000
@@ -55,11 +55,19 @@ Each run is scored on four checks: **flag** (review flag matches the key), **con
 4. Open `/api/health`. It reports `"mode": "claude"` when the key is picked up and the section count when the knowledge base was bundled.
 5. On the portfolio's replay page, add a "Try a live question" link to this deployment.
 
+6. For shared limits, add Upstash Redis from the Vercel Marketplace and connect it to the project. It adds `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` and `KV_REST_API_TOKEN`) for you. Redeploy, then confirm `/api/health` shows `"limiter":"shared"`.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `HOURLY_LIMIT` | 20 | questions per visitor per hour |
+| `DAILY_LIMIT` | 300 | questions for the whole site per UTC day |
+| `RL_SALT` | built-in | optional; salts the hash of visitor IPs |
+
 Optional: set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` to trace every call in LangSmith.
 
 ## Limits to know about
 
-- Rate limiting lives in server memory and resets per Vercel instance. It stops casual abuse, not a determined one.
+- **Usage limits** are enforced on the server, never in the HTML. Each visitor gets `HOURLY_LIMIT` questions an hour (default 20), and the whole site gets `DAILY_LIMIT` a day (default 300). The counters live in Upstash Redis so every Vercel instance shares them; visitor IPs are hashed before use. If Redis is not configured or is down, the limiter falls back to per-instance memory, which is weaker. `/api/health` reports `"limiter": "shared"` only when Redis actually answers. Also set a monthly spending limit in the Anthropic Console as the backstop.
 - Inputs are capped at 500 characters, and question text is not logged by this app.
 - The knowledge base is fictional (vendor "Northgate"). Do not put real customer data in it.
 - `kb/` currently holds a **starter knowledge base reconstructed from the answer key and recorded answers**. Replace it with the original files (format: `# Document name`, then `## ID Title` sections) before comparing results with the recorded run.
@@ -68,11 +76,11 @@ Optional: set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` to trace every ca
 
 ```
 api/index.py       FastAPI app (POST /api/answer, GET /api/health)
-responder/         kb.py (retrieval), guard.py (injection guard), agent.py (the pipeline)
+responder/         kb.py (retrieval), guard.py (injection guard), agent.py (the pipeline), ratelimit.py (usage limits)
 evals/             score.py (the four checks), run_eval.py
 data/              answer keys (tuned and held-out)
 recorded/          the original recorded run, unchanged
 kb/                knowledge base sections
 public/index.html  test page
-tests/             15 tests
+tests/             28 tests
 ```

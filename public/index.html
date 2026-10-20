@@ -84,7 +84,7 @@ go.addEventListener("click", async () => {
   go.disabled = true; go.textContent = "Working…"; show("");
   try {
     const res = await fetch("/api/answer", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question }) });
-    if (res.status === 429) throw new Error("Hourly limit reached. Please try again later.");
+    if (res.status === 429) { const b = await res.json().catch(() => ({})); throw new Error(b.detail || "Limit reached. Please try again later."); }
     if (!res.ok) throw new Error("The answer service is unavailable right now (error " + res.status + ").");
     render(await res.json());
   } catch (e) { $("result").hidden = true; show(e.message); }

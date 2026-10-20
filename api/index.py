@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 import os
 import sys
-import time
-from collections import defaultdict, deque
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -16,9 +14,9 @@ from fastapi.responses import JSONResponse  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
 from responder.agent import DEFAULT_MODEL, answer_question, load_default_kb, make_client  # noqa: E402
+from responder.ratelimit import LimitExceeded, Limiter  # noqa: E402
 
 MAX_QUESTION_CHARS = 500
-HOURLY_LIMIT = int(os.environ.get("HOURLY_LIMIT", "20"))
 
 log = logging.getLogger("responder")
 
@@ -59,7 +57,7 @@ async def not_found(request: Request, exc):
     return JSONResponse({"detail": "Not Found", "saw_path": request.url.path}, status_code=404)
 
 
-_hits: dict[str, deque] = defaultdict(deque)  # per server instance only: casual-abuse protection, not a hard limit
+limiter = Limiter.from_env()  # shared Redis counters when configured, else this instance's memory
 _client = make_client()
 
 
@@ -67,25 +65,19 @@ class Ask(BaseModel):
     question: str = Field(min_length=3, max_length=MAX_QUESTION_CHARS)
 
 
-def _check_rate(ip: str) -> None:
-    now, window = time.time(), _hits[ip]
-    while window and now - window[0] > 3600:
-        window.popleft()
-    if len(window) >= HOURLY_LIMIT:
-        raise HTTPException(429, "Hourly limit reached. Please try again later.")
-    window.append(now)
-
-
 @app.get("/api/health")
 def health():
     sections, _ = load_default_kb()
-    return {"ok": True, "mode": "claude" if _client else "mock", "sections": len(sections)}
+    return {"ok": True, "mode": "claude" if _client else "mock", "sections": len(sections), "limiter": limiter.status()}
 
 
 @app.post("/api/answer")
 def answer(body: Ask, request: Request):
     ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "unknown")).split(",")[0].strip()
-    _check_rate(ip)
+    try:
+        limiter.check(ip)
+    except LimitExceeded as exc:
+        raise HTTPException(429, exc.message)
     try:
         record = answer_question(body.question, client=_client)
     except Exception as exc:  # never leak provider errors or keys to the browser
