@@ -33,3 +33,27 @@ def test_rate_limit(monkeypatch):
     c = TestClient(web.app)
     codes = [c.post("/api/answer", json={"question": "Do you offer an SLA?"}).status_code for _ in range(3)]
     assert codes == [200, 200, 429]
+
+
+def test_failures_are_logged_without_the_question(monkeypatch, caplog):
+    def boom(*a, **k):
+        raise RuntimeError("auth failed")
+    monkeypatch.setattr(web, "answer_question", boom)
+    r = TestClient(web.app).post("/api/answer", json={"question": "secret question text"})
+    assert r.status_code == 502
+    assert "RuntimeError: auth failed" in caplog.text and "secret question text" not in caplog.text
+
+
+def test_rewritten_paths_still_reach_the_right_route():
+    c = TestClient(web.app)
+    for path in ("/api/index", "/index", "/api"):
+        assert c.get(path).json()["ok"] is True                      # GET -> health
+        r = c.post(path, json={"question": "Do you support SCIM?"})  # POST -> answer
+        assert r.status_code == 200 and "record" in r.json()
+    assert c.get("/some/prefix/health").status_code == 200
+    assert c.post("/some/prefix/answer", json={"question": "Do you support SCIM?"}).status_code == 200
+
+
+def test_404_says_which_path_it_saw():
+    body = TestClient(web.app).get("/api/nope").json()
+    assert body == {"detail": "Not Found", "saw_path": "/api/nope"}
