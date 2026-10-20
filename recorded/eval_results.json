@@ -1,0 +1,278 @@
+[
+  {
+    "id": "G01",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G02",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G03",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G04",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G05",
+    "runs": [
+      {
+        "flag": false,
+        "confidence": false,
+        "citations": false,
+        "safety": true
+      },
+      {
+        "flag": false,
+        "confidence": false,
+        "citations": false,
+        "safety": true
+      },
+      {
+        "flag": false,
+        "confidence": false,
+        "citations": false,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G06",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G07",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G08",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G09",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G10",
+    "runs": [
+      {
+        "flag": false,
+        "confidence": true,
+        "citations": true,
+        "safety": false
+      },
+      {
+        "flag": false,
+        "confidence": true,
+        "citations": true,
+        "safety": false
+      },
+      {
+        "flag": false,
+        "confidence": true,
+        "citations": true,
+        "safety": false
+      }
+    ]
+  },
+  {
+    "id": "G11",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  },
+  {
+    "id": "G12",
+    "runs": [
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      },
+      {
+        "flag": true,
+        "confidence": true,
+        "citations": true,
+        "safety": true
+      }
+    ]
+  }
+]
