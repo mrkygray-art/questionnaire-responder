@@ -73,3 +73,16 @@ def test_status_is_shared_only_when_the_store_answers():
     lim.fail = True
     assert "unreachable" in lim.status()
     assert Limiter().status().startswith("memory (shared store not configured")
+
+
+def test_store_is_found_under_any_variable_prefix():
+    from responder.ratelimit import find_store
+    plain = {"KV_REST_API_URL": "https://a.upstash.io", "KV_REST_API_TOKEN": "tok", "KV_REST_API_READ_ONLY_TOKEN": "ro"}
+    assert find_store(plain) == ("https://a.upstash.io", "tok")
+    prefixed = {"STORAGE_KV_REST_API_URL": "https://b.upstash.io", "STORAGE_KV_REST_API_TOKEN": "tok2"}
+    assert find_store(prefixed) == ("https://b.upstash.io", "tok2")
+    native = {"UPSTASH_REDIS_REST_URL": "https://c.upstash.io", "UPSTASH_REDIS_REST_TOKEN": "tok3"}
+    assert find_store(native) == ("https://c.upstash.io", "tok3")
+    assert find_store({"KV_REST_API_URL": "https://d.upstash.io"}) == (None, None)  # a URL without its token is unusable
+    assert find_store({}) == (None, None)
+    assert Limiter.from_env(prefixed).configured

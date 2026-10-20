@@ -32,6 +32,20 @@ HOURLY_MESSAGE = "Hourly limit reached for your connection. Please try again lat
 DAILY_MESSAGE = "The live demo has reached today's limit. The recorded replay on the portfolio still works."
 
 
+def find_store(environ) -> tuple[str | None, str | None]:
+    """Find the Redis REST URL and token. Vercel's Marketplace lets you add a prefix to the variable
+    names (for example STORAGE_KV_REST_API_URL), so match on the name's ending and pair the token
+    that shares the same prefix. The read-only token is never used."""
+    for url_name in ("UPSTASH_REDIS_REST_URL", "KV_REST_API_URL"):
+        token_name = url_name.replace("URL", "TOKEN")
+        for name, value in environ.items():
+            if name.endswith(url_name) and value:
+                token = environ.get(name[: -len(url_name)] + token_name)
+                if token:
+                    return value, token
+    return None, None
+
+
 class Limiter:
     def __init__(self, hourly: int = 20, daily: int = 300, url: str | None = None,
                  token: str | None = None, salt: str = "", timeout: float = 1.5):
@@ -41,14 +55,14 @@ class Limiter:
         self._mem_day: dict[str, int] = {}
 
     @classmethod
-    def from_env(cls) -> "Limiter":
-        env = os.environ.get
+    def from_env(cls, environ=None) -> "Limiter":
+        environ = os.environ if environ is None else environ
+        url, token = find_store(environ)
         return cls(
-            hourly=int(env("HOURLY_LIMIT", "20")),
-            daily=int(env("DAILY_LIMIT", "300")),
-            url=env("UPSTASH_REDIS_REST_URL") or env("KV_REST_API_URL"),
-            token=env("UPSTASH_REDIS_REST_TOKEN") or env("KV_REST_API_TOKEN"),
-            salt=env("RL_SALT", "questionnaire-responder"),
+            hourly=int(environ.get("HOURLY_LIMIT", "20")),
+            daily=int(environ.get("DAILY_LIMIT", "300")),
+            url=url, token=token,
+            salt=environ.get("RL_SALT", "questionnaire-responder"),
         )
 
     @property
